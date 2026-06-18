@@ -1,0 +1,9 @@
+[submodule "vibeauracle"]
+	path = vibeauracle
+	url = https://github.com/nathfavour/vibeauracle
+[submodule "auracrab"]
+	path = auracrab
+	url = https://github.com/nathfavour/auracrab
+[submodule "anyisland"]
+	path = anyisland
+	url = https://github.com/nathfavour/anyisland
