@@ -5,12 +5,12 @@ Production install paths for the full agentic stack.
 ## Recommended — curl install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/nathfavour/polygeist/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nathfavour/polygeist/master/install.sh | bash
 ```
 
 This will:
 
-1. Bootstrap **anyisland** if missing (`curl …/anyisland/main/install.sh`)
+1. Bootstrap **anyisland** if missing (`curl …/anyisland/master/install.sh`)
 2. `anyisland install polygeist` (recursive submodules: vibeauracle, auracrab, anyisland)
 3. Install binaries to **`~/.local/bin`**
 4. Configure UDS paths under **`~/.polygeist/run`**

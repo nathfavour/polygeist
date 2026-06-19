@@ -2,13 +2,13 @@
 # Polygeist installer — bootstraps anyisland, then installs the full stack.
 #
 # Recommended (single command, no git clone):
-#   curl -sSL https://raw.githubusercontent.com/nathfavour/polygeist/main/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/nathfavour/polygeist/master/install.sh | bash
 #
 # From a local monorepo checkout:
 #   ./install.sh
 set -euo pipefail
 
-ANYISLAND_INSTALL_URL="https://raw.githubusercontent.com/nathfavour/anyisland/main/install.sh"
+ANYISLAND_INSTALL_URL="https://raw.githubusercontent.com/nathfavour/anyisland/master/install.sh"
 INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
 RUN_DIR="${AGENTIC_RUN_DIR:-${HOME}/.polygeist/run}"
 CONFIG_DIR="${HOME}/.config/polygeist"

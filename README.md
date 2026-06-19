@@ -30,7 +30,7 @@ OpenClaw-style team bridge (Telegram, Slack, Discord). Phase 2 — sandbox verif
 One command — bootstraps **anyisland** (the package manager), then installs the full stack:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/nathfavour/polygeist/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nathfavour/polygeist/master/install.sh | bash
 ```
 
 Installs **polygeist**, **vibeaura**, **auracrab**, and **anyisland** to `~/.local/bin` and writes UDS config to `~/.config/polygeist/env`.
