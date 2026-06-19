@@ -2,43 +2,61 @@
 
 Production install paths for the full agentic stack.
 
-## Recommended — standalone install.sh
+## Recommended — auracrab + stack install
 
 ```bash
-git clone --recursive https://github.com/nathfavour/polygeist
-cd polygeist
-chmod +x install.sh scripts/start-daemons.sh
-./install.sh
+curl -sSL https://raw.githubusercontent.com/nathfavour/auracrab/main/install.sh | bash
+auracrab stack install polygeist
 ```
+
+Step 1 installs **auracrab** and **vibeaura**. Step 2 installs **polygeist** and **anyisland** as internal libraries (via anyisland official packages — no `github.com/nathfavour/polygeist` URL needed).
 
 This will:
 
-1. `git submodule update --init --recursive`
-2. Build **polygeist**, **vibeaura**, **auracrab**, and **anyisland**
-3. Install all four to **`~/.local/bin`**
+1. Bootstrap **anyisland** if missing
+2. `anyisland install polygeist` (recursive submodules: vibeauracle, auracrab, anyisland)
+3. Install binaries to **`~/.local/bin`**
 4. Configure UDS paths under **`~/.polygeist/run`**
 5. Append env to your shell profile (`~/.zshrc` or `~/.profile`)
 
 Then start daemons:
 
 ```bash
-./scripts/start-daemons.sh
-# or manually:
+. ~/.config/polygeist/env
 anyisland daemon start
 vibeaura daemon start
 polygeist --once "smoke test" --workdir .
 ```
 
+List other installable libraries (go, node, git, docker, …):
+
+```bash
+auracrab stack list
+auracrab stack install go
+```
+
 ---
 
-## Via anyisland package manager
+## From source — standalone install.sh
 
-Install anyisland first, then:
+```bash
+git clone --recursive https://github.com/nathfavour/polygeist
+cd polygeist
+chmod +x install.sh scripts/start-daemons.sh
+./install.sh
+./scripts/start-daemons.sh
+```
+
+Same outcome as stack install, but builds from a local monorepo checkout.
+
+---
+
+## Via anyisland directly
+
+If auracrab is already installed:
 
 ```bash
 anyisland install polygeist
-# or
-anyisland install github.com/nathfavour/polygeist
 ```
 
 The polygeist manifest sets `track_submodules` and `recursive_install`, so anyisland will:

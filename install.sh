@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 # Polygeist stack installer — recursive clone, build, and install to ~/.local/bin
+#
+# Recommended (no git clone):
+#   curl -sSL https://raw.githubusercontent.com/nathfavour/auracrab/main/install.sh | bash
+#   auracrab stack install polygeist
+#
+# This script is for developers with a local polygeist checkout.
 set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
