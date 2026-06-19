@@ -1,7 +1,7 @@
 FROM golang:1.25-alpine AS builder
 RUN apk add --no-cache git
 WORKDIR /src
-COPY go.mod go.sum go.work ./
+COPY go.mod go.sum go.work go.work.sum ./
 COPY anyisland/ anyisland/
 COPY auracrab/ auracrab/
 COPY vibeauracle/ vibeauracle/

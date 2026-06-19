@@ -1,6 +1,8 @@
 module github.com/nathfavour/polygeist
 
-go 1.25.5
+go 1.24.0
+
+toolchain go1.25.5
 
 require (
 	github.com/gorilla/websocket v1.5.3
