@@ -27,14 +27,13 @@ OpenClaw-style team bridge (Telegram, Slack, Discord). Phase 2 — sandbox verif
 
 ## Install (production)
 
-**Recommended** — install auracrab first, then polygeist via the auracrab stack (no `git clone` of this repo required):
+One command — bootstraps **anyisland** (the package manager), then installs the full stack:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/nathfavour/auracrab/main/install.sh | bash
-auracrab stack install polygeist
+curl -sSL https://raw.githubusercontent.com/nathfavour/polygeist/main/install.sh | bash
 ```
 
-Installs **auracrab**, **vibeaura**, **polygeist**, and **anyisland** to `~/.local/bin` and writes UDS config to `~/.config/polygeist/env`.
+Installs **polygeist**, **vibeaura**, **auracrab**, and **anyisland** to `~/.local/bin` and writes UDS config to `~/.config/polygeist/env`.
 
 **From source** (monorepo checkout):
 
