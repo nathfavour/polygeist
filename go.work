@@ -5,4 +5,5 @@ use (
 	./anyisland
 	./auracrab
 	./vibeauracle/pkg/engine
+	./vibeauracle/pkg/ipc
 )

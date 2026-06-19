@@ -15,12 +15,13 @@ type SwarmEngine struct {
 	Mutator     engine.MutationInterface
 	Sandbox     sandbox.ExecutionInterface
 	Distributor packagemanager.DistributionInterface
-	Band        *band.Client
+	Band        *band.AgentClient
+	IPC         interface{ SetPhase(string) }
 	WorkDir     string
 	BinPath     string
 }
 
-func NewSwarmEngine(bandClient *band.Client) *SwarmEngine {
+func NewSwarmEngine(bandClient *band.AgentClient) *SwarmEngine {
 	return &SwarmEngine{
 		Mutator:     engine.NewDefaultEngine(),
 		Sandbox:     sandbox.NewDefaultExecutor(),
@@ -31,6 +32,12 @@ func NewSwarmEngine(bandClient *band.Client) *SwarmEngine {
 	}
 }
 
+func (s *SwarmEngine) setPhase(phase string) {
+	if s.IPC != nil {
+		s.IPC.SetPhase(phase)
+	}
+}
+
 // HandleEvent executes the three-phase Band.ai control loop for a task event.
 func (s *SwarmEngine) HandleEvent(ctx context.Context, evt band.Event) error {
 	workDir := evt.WorkDir()
@@ -38,7 +45,7 @@ func (s *SwarmEngine) HandleEvent(ctx context.Context, evt band.Event) error {
 		workDir = s.WorkDir
 	}
 
-	// Phase 1: Mutation
+	s.setPhase("mutating")
 	mutResult, err := s.Mutator.Mutate(ctx, engine.MutationRequest{
 		WorkDir:  workDir,
 		Payload:  evt.Payload,
@@ -56,6 +63,7 @@ func (s *SwarmEngine) HandleEvent(ctx context.Context, evt band.Event) error {
 	}
 
 	// Phase 2: Verification
+	s.setPhase("verifying")
 	verifyResult, err := s.Sandbox.Execute(ctx, sandbox.VerifyRequest{
 		WorkDir: workDir,
 		Command: evt.VerifyCommand(),
@@ -72,6 +80,7 @@ func (s *SwarmEngine) HandleEvent(ctx context.Context, evt band.Event) error {
 	}
 
 	// Phase 3: Distribution
+	s.setPhase("distributing")
 	binPath := s.BinPath
 	if binPath == "" {
 		binPath = workDir + "/polygeist"

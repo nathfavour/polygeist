@@ -53,7 +53,18 @@ go build -o polygeist ./cmd/polygeist
 
 ---
 
-## Run
+## Deploy
+
+See **[DEPLOY.md](DEPLOY.md)** for Docker, native, and Band.ai setup.
+
+Quick Docker start:
+
+```bash
+cp .env.example .env
+docker compose up --build -d
+```
+
+## Run (native)
 
 ### Band.ai control loop
 
@@ -63,7 +74,7 @@ export BAND_TOKEN=your-token
 polygeist
 ```
 
-Polygeist connects to `wss://api.band.ai/v1/ws`, listens on your room, and executes the full loop for every incoming task.
+Polygeist connects to Band via the official Agent API and Phoenix WebSocket (`app.band.ai`). See [DEPLOY.md](DEPLOY.md) for credentials.
 
 ### Local single task
 
@@ -77,8 +88,9 @@ polygeist --once "fix the auth middleware" --workdir /path/to/your/repo
 
 | Flag | Env var | Description |
 |---|---|---|
-| `--room` | `BAND_ROOM_ID` | Band.ai room to subscribe to |
-| `--token` | `BAND_TOKEN` | Band.ai API token |
+| `--chat` | `BAND_CHAT_ID` | Band chat room UUID |
+| `--api-key` | `BAND_API_KEY` | Band agent API key |
+| `--agent-id` | `BAND_AGENT_ID` | Band agent UUID |
 | `--workdir` | — | Workspace directory (default: `.`) |
 | `--once` | — | Run a single payload locally and exit |
 | `--version` | — | Print version |

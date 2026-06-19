@@ -1,0 +1,56 @@
+name: polygeist
+
+x-agentic-env: &agentic-env
+  AGENTIC_RUN_DIR: /run/agentic
+  ANYISLAND_SOCKET: /run/agentic/anyisland.sock
+  VIBEAURA_SOCKET: /run/agentic/vibeaura.sock
+  POLYGEIST_SOCKET: /run/agentic/polygeist.sock
+
+services:
+  anyisland:
+    build:
+      context: ../anyisland
+      dockerfile: Dockerfile
+    command: ["daemon", "start"]
+    volumes:
+      - agentic-run:/run/agentic
+      - anyisland-data:/root/.anyisland
+    environment: *agentic-env
+    restart: unless-stopped
+
+  vibeauracle:
+    build:
+      context: ../vibeauracle
+      dockerfile: Dockerfile
+    command: ["daemon", "start"]
+    depends_on:
+      - anyisland
+    volumes:
+      - agentic-run:/run/agentic
+      - vibe-data:/root/.vibeauracle
+    environment: *agentic-env
+    restart: unless-stopped
+
+  polygeist:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - anyisland
+      - vibeauracle
+    volumes:
+      - agentic-run:/run/agentic
+      - workspace:/workspace
+    environment:
+      <<: *agentic-env
+      BAND_API_KEY: ${BAND_API_KEY:-}
+      BAND_AGENT_ID: ${BAND_AGENT_ID:-}
+      BAND_CHAT_ID: ${BAND_CHAT_ID:-}
+    working_dir: /workspace
+    restart: unless-stopped
+
+volumes:
+  agentic-run:
+  anyisland-data:
+  vibe-data:
+  workspace:
