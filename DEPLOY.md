@@ -2,18 +2,15 @@
 
 Production install paths for the full agentic stack.
 
-## Recommended — auracrab + stack install
+## Recommended — curl install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/nathfavour/auracrab/main/install.sh | bash
-auracrab stack install polygeist
+curl -sSL https://raw.githubusercontent.com/nathfavour/polygeist/main/install.sh | bash
 ```
-
-Step 1 installs **auracrab** and **vibeaura**. Step 2 installs **polygeist** and **anyisland** as internal libraries (via anyisland official packages — no `github.com/nathfavour/polygeist` URL needed).
 
 This will:
 
-1. Bootstrap **anyisland** if missing
+1. Bootstrap **anyisland** if missing (`curl …/anyisland/main/install.sh`)
 2. `anyisland install polygeist` (recursive submodules: vibeauracle, auracrab, anyisland)
 3. Install binaries to **`~/.local/bin`**
 4. Configure UDS paths under **`~/.polygeist/run`**
@@ -28,16 +25,9 @@ vibeaura daemon start
 polygeist --once "smoke test" --workdir .
 ```
 
-List other installable libraries (go, node, git, docker, …):
-
-```bash
-auracrab stack list
-auracrab stack install go
-```
-
 ---
 
-## From source — standalone install.sh
+## From source — monorepo checkout
 
 ```bash
 git clone --recursive https://github.com/nathfavour/polygeist
@@ -47,13 +37,13 @@ chmod +x install.sh scripts/start-daemons.sh
 ./scripts/start-daemons.sh
 ```
 
-Same outcome as stack install, but builds from a local monorepo checkout.
+Builds from local submodules instead of fetching via anyisland.
 
 ---
 
 ## Via anyisland directly
 
-If auracrab is already installed:
+If anyisland is already installed:
 
 ```bash
 anyisland install polygeist
