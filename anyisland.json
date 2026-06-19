@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "Sovereign multi-agent control plane and orchestration daemon",
   "repository": "github.com/nathfavour/polygeist",
+  "install_dir": "~/.local/bin",
   "build": {
-    "toolchain": "go",
+    "toolchain": "shell",
     "steps": [
+      "git submodule update --init --recursive",
       "go build -ldflags \"-s -w\" -o polygeist ./cmd/polygeist"
     ],
     "bin": "polygeist"
@@ -17,6 +19,6 @@
   "runtime": {
     "daemon": true,
     "pulse": true,
-    "dependencies": ["git"]
+    "dependencies": ["git", "go"]
   }
 }

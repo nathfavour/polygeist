@@ -1,154 +1,101 @@
 # Deploying Polygeist
 
-Polygeist orchestrates **vibeauracle**, **auracrab**, and **anyisland** over Unix domain sockets (UDS) and connects to [Band.ai](https://docs.band.ai) for remote task dispatch.
+Production install paths for the full agentic stack.
 
-## Architecture
-
-```text
-Band.ai (REST + Phoenix WebSocket)
-        │
-        ▼
-   polygeist.sock ── polygeist (orchestrator)
-        │                │
-        │                ├── mutation  → vibeaura.sock (vibeauracle)
-        │                ├── verify    → auracrab sandbox (local/docker)
-        │                └── publish   → anyisland.sock (anyisland)
-        │
-   /run/agentic/  (shared UDS directory in Docker)
-```
-
-### UDS paths (default)
-
-| Component   | Socket                                      | Env override        |
-|-------------|---------------------------------------------|---------------------|
-| anyisland   | `~/.anyisland/anyisland.sock`               | `ANYISLAND_SOCKET`  |
-| vibeauracle | `~/.vibeauracle/vibeaura.sock`              | `VIBEAURA_SOCKET`   |
-| polygeist   | `~/.polygeist/run/polygeist.sock`           | `POLYGEIST_SOCKET`  |
-
-Set `AGENTIC_RUN_DIR=/run/agentic` to colocate all sockets (used by Docker).
-
-Check polygeist health:
+## Recommended — standalone install.sh
 
 ```bash
-echo '{"op":"HEALTH"}' | nc -U ~/.polygeist/run/polygeist.sock
+git clone --recursive https://github.com/nathfavour/polygeist
+cd polygeist
+chmod +x install.sh scripts/start-daemons.sh
+./install.sh
 ```
 
----
+This will:
 
-## Option 1 — Docker (fastest)
-
-From the `polygeist` directory:
-
-```bash
-cp .env.example .env   # fill in Band credentials
-docker compose up --build -d
-```
-
-Required env vars in `.env`:
-
-```bash
-BAND_API_KEY=your-agent-api-key
-BAND_AGENT_ID=your-agent-uuid
-BAND_CHAT_ID=your-chat-room-uuid
-```
-
-Services started:
-
-| Service     | Role                                      |
-|-------------|-------------------------------------------|
-| anyisland   | Package manager daemon + UDS broker       |
-| vibeauracle | Mutation engine daemon + UDS            |
-| polygeist   | Band control loop + orchestrator UDS    |
-
-Mount your repo into the stack:
-
-```bash
-docker compose run --rm -v "$PWD/../myproject:/workspace" polygeist \
-  --once "fix the login bug" --workdir /workspace
-```
-
----
-
-## Option 2 — Native install via anyisland
-
-```bash
-anyisland install github.com/nathfavour/polygeist
-```
+1. `git submodule update --init --recursive`
+2. Build **polygeist**, **vibeaura**, **auracrab**, and **anyisland**
+3. Install all four to **`~/.local/bin`**
+4. Configure UDS paths under **`~/.polygeist/run`**
+5. Append env to your shell profile (`~/.zshrc` or `~/.profile`)
 
 Then start daemons:
 
 ```bash
+./scripts/start-daemons.sh
+# or manually:
 anyisland daemon start
 vibeaura daemon start
-polygeist --chat "$BAND_CHAT_ID" --api-key "$BAND_API_KEY" --agent-id "$BAND_AGENT_ID"
+polygeist --once "smoke test" --workdir .
 ```
 
 ---
 
-## Option 3 — Build from source
+## Via anyisland package manager
+
+Install anyisland first, then:
 
 ```bash
-# sibling repos
-git clone --recursive https://github.com/nathfavour/polygeist
-cd polygeist
-go build -o polygeist ./cmd/polygeist
+anyisland install polygeist
+# or
+anyisland install github.com/nathfavour/polygeist
+```
 
-# start IPC daemons (separate terminals)
-anyisland daemon start
-vibeaura daemon start
+The polygeist manifest sets `track_submodules` and `recursive_install`, so anyisland will:
 
-# run
+- `git clone --recursive`
+- Build polygeist
+- Build and install submodule binaries (vibeaura, auracrab, anyisland) alongside the primary binary
+
+Install destination defaults to **`~/.local/bin`** when specified in the manifest.
+
+---
+
+## Docker
+
+```bash
+cp .env.example .env   # BAND_API_KEY, BAND_AGENT_ID, BAND_CHAT_ID
+docker compose up --build -d
+```
+
+Shared UDS volume: `/run/agentic` on all services.
+
+---
+
+## UDS communication
+
+| Component   | Socket (standalone default)     | Override env        |
+|-------------|----------------------------------|---------------------|
+| anyisland   | `$AGENTIC_RUN_DIR/anyisland.sock` | `ANYISLAND_SOCKET`  |
+| vibeauracle | `$AGENTIC_RUN_DIR/vibeaura.sock`  | `VIBEAURA_SOCKET`   |
+| polygeist   | `$AGENTIC_RUN_DIR/polygeist.sock` | `POLYGEIST_SOCKET`  |
+
+After `./install.sh`, source `~/.config/polygeist/env`.
+
+Health check:
+
+```bash
+echo '{"op":"HEALTH"}' | nc -U "$POLYGEIST_SOCKET"
+```
+
+---
+
+## Band.ai production run
+
+```bash
+. ~/.config/polygeist/env
 export BAND_API_KEY=...
 export BAND_AGENT_ID=...
 export BAND_CHAT_ID=...
-./polygeist
+polygeist
 ```
 
----
-
-## Band.ai setup
-
-1. Register a remote agent in Band (Human API or dashboard).
-2. Copy the **agent API key** and **agent ID**.
-3. Add the agent to a chat room; copy the **chat room UUID**.
-4. Export credentials (see above).
-
-Polygeist uses:
-
-- **REST** `https://app.band.ai/api/v1/agent` — send events, mark messages processed
-- **WebSocket** `wss://app.band.ai/api/v1/socket/websocket` — Phoenix Channels, `message_created` events
-
-On startup polygeist drains `/messages/next` for crash recovery, then listens on WebSocket with 30s heartbeats.
+Uses `https://app.band.ai/api/v1/agent` (REST) and Phoenix WebSocket subscriptions.
 
 ---
 
-## Local task (no Band)
+## Requirements
 
-```bash
-polygeist --once "add retry logic to the API client" --workdir /path/to/repo
-```
-
-Requires `vibeaura daemon start` for UDS mutation (falls back to CLI if UDS is down).
-
----
-
-## auracrab (team integrations)
-
-Run on the host for Telegram/Slack/Discord bridges:
-
-```bash
-auracrab start
-```
-
-auracrab talks to vibeauracle over `vibeaura.sock` and anyisland over `anyisland.sock`. It is optional for the core polygeist loop but required for engineering-team messaging integrations.
-
----
-
-## Troubleshooting
-
-| Symptom | Fix |
-|---------|-----|
-| `vibeauracle uds: connection refused` | Run `vibeaura daemon start` |
-| `band websocket dial` failed | Check `BAND_API_KEY`, network, `app.band.ai` reachability |
-| `chat ID required` | Set `BAND_CHAT_ID` or `--chat` |
-| Sockets not shared in Docker | Ensure `agentic-run` volume is mounted on all services |
+- Go 1.25+
+- Git
+- `~/.local/bin` on PATH (install.sh configures this)

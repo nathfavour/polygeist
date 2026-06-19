@@ -6,131 +6,67 @@ Sovereign multi-agent control plane. Polygeist listens for tasks, runs them thro
 Band.ai room ──► polygeist ──► vibeauracle ──► auracrab ──► anyisland
                      │              │              │            │
                      │           mutate         verify       publish
-                     └──────────── orchestrates all three via interfaces
+                     └──────────── orchestrates all three via UDS
 ```
 
 ## The three components
 
-Polygeist does not embed these tools. It orchestrates them as independent agents through abstract interfaces. Each lives in its own repository and is tracked here as a Git submodule.
-
 ### [vibeauracle](https://github.com/nathfavour/vibeauracle)
 
-A CLI agentic harness — think Claude Code for your terminal. It reads your codebase, applies structural mutations, runs tools, and drives the engineering loop directly from the shell.
-
-**Role in polygeist:** Phase 1 — mutation. Receives a task payload and changes the target workspace.
+CLI agentic harness (Claude Code–style). Phase 1 — mutation via UDS (`vibeaura.sock`).
 
 ### [anyisland](https://github.com/nathfavour/anyisland)
 
-An agentic package manager. Agents use it to install tools, share binaries, and communicate resources across the fleet without manual setup.
-
-**Role in polygeist:** Phase 3 — distribution. Signs release hashes, updates manifests, and publishes immutable artifacts after verification passes.
+Agentic package manager. Phase 3 — distribution via UDS (`anyisland.sock`).
 
 ### [auracrab](https://github.com/nathfavour/auracrab)
 
-Like OpenClaw — a harness that connects to the outside world. It leverages vibeauracle under the hood and handles integration with Telegram, Slack, Discord, and engineering teams. The butler that keeps agents reachable where humans already work.
-
-**Role in polygeist:** Phase 2 — verification. Runs the isolated compiler matrix and test runner inside a sandbox before anything ships.
+OpenClaw-style team bridge (Telegram, Slack, Discord). Phase 2 — sandbox verification.
 
 ---
 
-## Quick start
-
-### Option A — install everything with anyisland (recommended)
-
-```bash
-anyisland install github.com/nathfavour/polygeist
-```
-
-With `track_submodules` enabled, anyisland pulls all three components and installs `polygeist`, `vibeauracle`, `auracrab`, and `anyisland` into your island bin tree.
-
-### Option B — build from source
+## Install (production)
 
 ```bash
 git clone --recursive https://github.com/nathfavour/polygeist
 cd polygeist
-go build -o polygeist ./cmd/polygeist
+./install.sh
+./scripts/start-daemons.sh
 ```
+
+Installs **polygeist**, **vibeaura**, **auracrab**, and **anyisland** to `~/.local/bin`.
+
+Or via anyisland:
+
+```bash
+anyisland install polygeist
+```
+
+Full details: **[DEPLOY.md](DEPLOY.md)**
 
 ---
 
-## Deploy
-
-See **[DEPLOY.md](DEPLOY.md)** for Docker, native, and Band.ai setup.
-
-Quick Docker start:
+## Run
 
 ```bash
-cp .env.example .env
-docker compose up --build -d
-```
+. ~/.config/polygeist/env
+anyisland daemon start
+vibeaura daemon start
 
-## Run (native)
-
-### Band.ai control loop
-
-```bash
-export BAND_ROOM_ID=your-room
-export BAND_TOKEN=your-token
+# Band.ai
+export BAND_API_KEY=... BAND_AGENT_ID=... BAND_CHAT_ID=...
 polygeist
+
+# Local task
+polygeist --once "fix auth middleware" --workdir /path/to/repo
 ```
-
-Polygeist connects to Band via the official Agent API and Phoenix WebSocket (`app.band.ai`). See [DEPLOY.md](DEPLOY.md) for credentials.
-
-### Local single task
-
-No Band account needed — run one task and exit:
-
-```bash
-polygeist --once "fix the auth middleware" --workdir /path/to/your/repo
-```
-
-### Flags
-
-| Flag | Env var | Description |
-|---|---|---|
-| `--chat` | `BAND_CHAT_ID` | Band chat room UUID |
-| `--api-key` | `BAND_API_KEY` | Band agent API key |
-| `--agent-id` | `BAND_AGENT_ID` | Band agent UUID |
-| `--workdir` | — | Workspace directory (default: `.`) |
-| `--once` | — | Run a single payload locally and exit |
-| `--version` | — | Print version |
 
 ---
 
-## Control loop
+## Submodule workflow
 
-Every task flows through three phases:
-
-1. **Mutation** — vibeauracle applies changes to the codebase
-2. **Verification** — auracrab runs tests in an isolated sandbox
-3. **Distribution** — anyisland signs and publishes the release metadata back to the room
-
-If any phase fails, polygeist logs the error to the Band room and stops.
-
----
-
-## Repository layout
-
-```
-polygeist/          ← you are here (orchestrator)
-├── vibeauracle/    ← submodule tracker
-├── auracrab/       ← submodule tracker
-└── anyisland/      ← submodule tracker
-```
-
-The sibling repos (`vibeauracle/`, `auracrab/`, `anyisland/` alongside `polygeist/` in a parent directory) are the canonical source. **Never commit code inside the nested submodule folders here** — push changes to the standalone repos, then advance the pointers:
+Push changes to standalone repos (`vibeauracle`, `auracrab`, `anyisland`), then:
 
 ```bash
 git submodule update --remote --merge
 ```
-
-Compilation uses a `go.work` file committed only at the root of this repository.
-
----
-
-## Requirements
-
-- Go 1.25+
-- `git` (submodule sync)
-- `vibeaura` on `PATH` (mutation phase)
-- `docker` optional (sandbox verification falls back to local execution)
