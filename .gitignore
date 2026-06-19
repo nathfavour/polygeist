@@ -1,3 +1,6 @@
 
 # Added by Autocommiter SECURE_MODE:
 .env.example
+
+# Added by Autocommiter SECURE_MODE:
+bin/polygeist
